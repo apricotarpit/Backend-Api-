@@ -23,9 +23,54 @@ export const createTodo = async (req: AuthRequest, res: Response) => {
 };
 
 export const listTodos = async (req: AuthRequest, res: Response) => {
-    const todos = await prismaClient.todo.findMany({ where: { userId: req.user.id }, orderBy: { createdAt: 'desc' } });
-      
-    return res.json(todos);
+
+    console.log('query',req.query);
+    
+
+  const titleQuery = typeof req.query.title !== 'undefined' ? String(req.query.title).trim() : undefined;
+  const completedQuery = typeof req.query.completed !== 'undefined' ? String(req.query.completed).trim().toLowerCase() : undefined;
+
+  const where: any = { userId: req.user.id };
+
+  const sortQueryRaw = typeof req.query.sortBy !== 'undefined' ? String(req.query.sortBy) : 'createdAt';
+  const sortQuery = sortQueryRaw.trim();
+
+  const sortOrderRaw = typeof req.query.sortOrder !== 'undefined' ? String(req.query.sortOrder) : 'desc';
+  const sortOrder = sortOrderRaw.toLowerCase() === 'asc' ? 'asc' : 'desc';
+
+  const ALLOWED_SORT_FIELDS = ['title', 'createdAt', 'updatedAt', 'completed', 'id'];
+
+  if (!ALLOWED_SORT_FIELDS.includes(sortQuery)) {
+    return res.status(400).json({
+      error: `Invalid sortBy field. Allowed: ${ALLOWED_SORT_FIELDS.join(', ')}`,
+    });
+  }
+
+  if (titleQuery) {
+    where.title = {
+      startsWith: titleQuery,
+      mode: 'insensitive',
+    };
+  }
+
+  if (typeof completedQuery !== 'undefined') {
+    if (completedQuery === 'true' || completedQuery === '1') {
+      where.completed = true;
+    } else if (completedQuery === 'false' || completedQuery === '0') {
+      where.completed = false;
+    } else {
+      return res.status(400).json({ error: 'completed must be true/false or 1/0' });
+    }
+  }
+
+  const orderBy: any = {};
+  orderBy[sortQuery] = sortOrder;
+
+  const todos = await prismaClient.todo.findMany({
+    where,
+    orderBy,
+  });
+  return res.json(todos);
 };
 
 
@@ -45,4 +90,5 @@ export const deleteTodo = async (req: AuthRequest, res: Response) => {
     if (!todo || todo.userId !== req.user.id) return res.status(404).json({ message: 'Todo not found' });
     await prismaClient.todo.delete({ where: { id } });
     return res.json({ message: 'Deleted' });
+
 };
