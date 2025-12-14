@@ -5,9 +5,9 @@ import { validate } from '../middlewares/validate.ts';
 
 
 const authrouter:Router=Router();
+authrouter.post("/login",validate(loginRequest),login);
+authrouter.post("/register",validate(registerRequest),register);
+authrouter.post('/logout',validate(logoutRequest), logout);
 
-authrouter.post("/login",login);
-authrouter.post("/register",register);
-authrouter.post('/logout', logout);
 
 export default authrouter;
