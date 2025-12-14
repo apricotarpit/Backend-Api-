@@ -10,9 +10,10 @@ const router:Router = Router();
 
 router.use(requireAuth);
 router.post('/create', validate(createTodoRequest), createTodo);
-router.get('/list', listTodos);
+router.get('/list', validate(listTodosQuery), listTodos);
 router.put('/:id', validate(updateTodoRequest), updateTodo);
-router.delete('/:id', deleteTodo);
+router.delete('/:id', validate(deleteTodoParams), deleteTodo);
+
 
 
 export default router;
