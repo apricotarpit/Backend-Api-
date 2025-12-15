@@ -9,3 +9,7 @@ rootRouter.use('/todos', todosRoutes);
 
 
 export default rootRouter; 
+
+rootRouter.listen(3000, () => {
+  console.log('Server is running on port 3000');
+}   );
